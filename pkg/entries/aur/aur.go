@@ -2,12 +2,11 @@ package aur
 
 import (
 	"encoding/xml"
-	"fmt"
-	"net/http"
 	"strings"
 	"time"
 
 	"github.com/Necoro/arch-log/pkg/entries"
+	"github.com/Necoro/arch-log/pkg/http"
 	"github.com/Necoro/arch-log/pkg/log"
 )
 
@@ -54,24 +53,16 @@ func buildUrl(pkg string) string {
 }
 
 func fetch(url string) ([]entry, error) {
-	resp, err := http.Get(url)
+	result, err := http.Fetch(url)
 	if err != nil {
-		return nil, fmt.Errorf("fetching %s: %w", url, err)
+		return nil, err
 	}
-
-	defer resp.Body.Close()
-
-	if resp.StatusCode == http.StatusNotFound {
-		return nil, entries.ErrNotFound
-	}
-	if resp.StatusCode >= 300 {
-		return nil, fmt.Errorf("fetching %s: Server returned status %s", url, resp.Status)
-	}
+	defer result.Close()
 
 	log.Debugf("Fetching from AUR (%s) successful.", url)
 
 	var feed feed
-	d := xml.NewDecoder(resp.Body)
+	d := xml.NewDecoder(result)
 	if err := d.Decode(&feed); err != nil {
 		return nil, err
 	}

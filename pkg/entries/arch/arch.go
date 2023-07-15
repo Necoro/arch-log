@@ -2,13 +2,12 @@ package arch
 
 import (
 	"encoding/json"
-	"fmt"
-	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
 	"github.com/Necoro/arch-log/pkg/entries"
+	"github.com/Necoro/arch-log/pkg/http"
 	"github.com/Necoro/arch-log/pkg/log"
 )
 
@@ -44,24 +43,16 @@ func (e entry) cleanedMessage() string {
 }
 
 func fetch(url string) ([]entry, error) {
-	resp, err := http.Get(url)
+	result, err := http.Fetch(url)
 	if err != nil {
-		return nil, fmt.Errorf("fetching %s: %w", url, err)
+		return nil, err
 	}
-
-	defer resp.Body.Close()
-
-	if resp.StatusCode == http.StatusNotFound {
-		return nil, entries.ErrNotFound
-	}
-	if resp.StatusCode >= 300 {
-		return nil, fmt.Errorf("fetching %s: Server returned status %s", url, resp.Status)
-	}
+	defer result.Close()
 
 	log.Debugf("Fetching from Arch (%s) successful.", url)
 
 	var jsonEntries []entry
-	d := json.NewDecoder(resp.Body)
+	d := json.NewDecoder(result)
 	if err := d.Decode(&jsonEntries); err != nil {
 		return nil, err
 	}
