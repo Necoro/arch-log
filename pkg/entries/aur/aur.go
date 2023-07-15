@@ -24,7 +24,7 @@ type entry struct {
 	Title   string    `xml:"title"`
 	Updated string    `xml:"updated"`
 	Author  string    `xml:"author>name"`
-	Content []content `xml:"content""`
+	Content []content `xml:"content"`
 }
 
 func (e entry) convertTime() time.Time {
