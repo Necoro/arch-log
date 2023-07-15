@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"time"
 
 	"github.com/Necoro/arch-log/pkg/entries"
 	"github.com/Necoro/arch-log/pkg/entries/arch"
@@ -19,6 +20,7 @@ var (
 	debug        bool = false
 	archForce    bool = false
 	aurForce     bool = false
+	reverse      bool = false
 )
 
 func init() {
@@ -26,13 +28,16 @@ func init() {
 	flag.BoolVar(&debug, "d", debug, "enable debug output")
 	flag.BoolVar(&archForce, "arch", archForce, "force usage of Arch git")
 	flag.BoolVar(&aurForce, "aur", aurForce, "force usage of AUR")
+	flag.BoolVar(&reverse, "r", reverse, "reverse order of commits")
 }
+
+var timeLess = time.Time.Before
 
 func formatEntryList(entryList []entries.Entry) {
 	log.Debugf("Received entries: %+v", entryList)
 
 	sort.SliceStable(entryList, func(i, j int) bool {
-		return entryList[i].CommitTime.Before(entryList[j].CommitTime)
+		return timeLess(entryList[i].CommitTime, entryList[j].CommitTime)
 	})
 
 	for _, e := range entryList {
@@ -76,6 +81,10 @@ func run() error {
 
 	if debug {
 		log.SetDebug()
+	}
+
+	if reverse {
+		timeLess = time.Time.After
 	}
 
 	if aurForce && archForce {
