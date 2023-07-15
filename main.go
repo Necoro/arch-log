@@ -21,6 +21,7 @@ var (
 	archForce    bool = false
 	aurForce     bool = false
 	reverse      bool = false
+	number       int  = 10
 )
 
 func init() {
@@ -29,6 +30,7 @@ func init() {
 	flag.BoolVar(&archForce, "arch", archForce, "force usage of Arch git")
 	flag.BoolVar(&aurForce, "aur", aurForce, "force usage of AUR")
 	flag.BoolVar(&reverse, "r", reverse, "reverse order of commits")
+	flag.IntVar(&number, "n", number, "max number of commits to show")
 }
 
 var timeLess = time.Time.Before
@@ -39,6 +41,14 @@ func formatEntryList(entryList []entries.Entry) {
 	sort.SliceStable(entryList, func(i, j int) bool {
 		return timeLess(entryList[i].CommitTime, entryList[j].CommitTime)
 	})
+
+	if len(entryList) > number {
+		if reverse {
+			entryList = entryList[:number]
+		} else {
+			entryList = entryList[len(entryList)-number:]
+		}
+	}
 
 	for _, e := range entryList {
 		fmt.Println(e.Format())
