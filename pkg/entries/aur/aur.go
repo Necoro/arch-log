@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/Necoro/arch-log/pkg/entries"
@@ -13,10 +14,17 @@ import (
 type feed struct {
 	Entries []entry `xml:"entry"`
 }
+
+type content struct {
+	Type string `xml:"type,attr"`
+	Text string `xml:",chardata"`
+}
+
 type entry struct {
-	Title   string `xml:"title"`
-	Updated string `xml:"updated"`
-	Author  string `xml:"author>name"`
+	Title   string    `xml:"title"`
+	Updated string    `xml:"updated"`
+	Author  string    `xml:"author>name"`
+	Content []content `xml:"content""`
 }
 
 func (e entry) convertTime() time.Time {
@@ -29,6 +37,16 @@ func (e entry) convertTime() time.Time {
 	} else {
 		return t
 	}
+}
+
+func (e entry) content() string {
+	for _, c := range e.Content {
+		if c.Type == "text" {
+			return strings.TrimSpace(c.Text)
+		}
+	}
+
+	return ""
 }
 
 func buildUrl(pkg string) string {
@@ -69,6 +87,7 @@ func convert(xmlEntries []entry) []entries.Entry {
 			CommitTime: xmlE.convertTime(),
 			Author:     xmlE.Author,
 			Summary:    xmlE.Title,
+			Message:    xmlE.content(),
 		}
 	}
 	return entryList
