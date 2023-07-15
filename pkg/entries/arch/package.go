@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 
+	"github.com/Necoro/arch-log/pkg/entries"
 	"github.com/Necoro/arch-log/pkg/http"
 	"github.com/Necoro/arch-log/pkg/log"
 )
@@ -38,7 +39,9 @@ func fetchPkgInfo(url string) (result, error) {
 		return result{}, err
 	}
 
-	if len(infos.Results) > 1 {
+	if len(infos.Results) == 0 {
+		return result{}, entries.ErrNotFound
+	} else if len(infos.Results) > 1 {
 		return result{}, fmt.Errorf("more than one package info found: %+v", infos.Results)
 	}
 

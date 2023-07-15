@@ -2,8 +2,6 @@ package arch
 
 import (
 	"encoding/json"
-	"errors"
-	"fmt"
 	"net/url"
 	"strings"
 	"time"
@@ -95,9 +93,6 @@ func GetEntries(pkg string) ([]entries.Entry, error) {
 	url := buildUrl(basePkg)
 	jsonEntries, err := fetch(url)
 	if err != nil {
-		if errors.Is(err, entries.ErrNotFound) {
-			err = fmt.Errorf("package not found on Gitlab, even though it exists on Packages @ Arch")
-		}
 		return nil, err
 	}
 	return convert(jsonEntries), nil
