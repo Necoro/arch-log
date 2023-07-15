@@ -2,6 +2,8 @@ package arch
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"net/url"
 	"strings"
 	"time"
@@ -82,9 +84,20 @@ func convert(jsonEntries []entry) []entries.Entry {
 
 //goland:noinspection GoImportUsedAsName
 func GetEntries(pkg string) ([]entries.Entry, error) {
-	url := buildUrl(pkg)
+	basePkg, err := determineBasePkg(pkg)
+	if err != nil {
+		return nil, err
+	}
+	if basePkg != pkg {
+		log.Printf("Mapped pkg '%s' to pkgbase '%s'", pkg, basePkg)
+	}
+
+	url := buildUrl(basePkg)
 	jsonEntries, err := fetch(url)
 	if err != nil {
+		if errors.Is(err, entries.ErrNotFound) {
+			err = fmt.Errorf("package not found on Gitlab, even though it exists on Packages @ Arch")
+		}
 		return nil, err
 	}
 	return convert(jsonEntries), nil
