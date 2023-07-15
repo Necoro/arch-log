@@ -85,7 +85,15 @@ func convert(xmlEntries []entry) []entries.Entry {
 }
 
 func GetEntries(pkg string) ([]entries.Entry, error) {
-	url := buildUrl(pkg)
+	basePkg, err := determineBasePkg(pkg)
+	if err != nil {
+		return nil, err
+	}
+	if basePkg != pkg {
+		log.Printf("Mapped pkg '%s' to pkgbase '%s'", pkg, basePkg)
+	}
+
+	url := buildUrl(basePkg)
 	xmlEntries, err := fetch(url)
 	if err != nil {
 		return nil, err
