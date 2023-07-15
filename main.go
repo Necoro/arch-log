@@ -28,7 +28,7 @@ func init() {
 }
 
 func formatEntryList(list []entries.Entry) {
-
+	log.Debugf("Received entries: %+v", list)
 }
 
 func handleEntries(what string, pkg string, f func(string) ([]entries.Entry, error)) (bool, error) {
