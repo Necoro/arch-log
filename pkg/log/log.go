@@ -19,7 +19,7 @@ const (
 	warn
 )
 
-var level logLevel = warn
+var level logLevel = info
 
 func SetVerbose() {
 	level = info
