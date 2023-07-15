@@ -3,6 +3,7 @@ package entries
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -23,5 +24,12 @@ func (e Entry) timeStr() string {
 }
 
 func (e Entry) Format() string {
-	return fmt.Sprintf("%-24s %s", e.timeStr(), e.Summary)
+	str := fmt.Sprintf("%-24s %s", e.timeStr(), e.Summary)
+	msg := strings.TrimSpace(e.Message)
+
+	if msg != "" {
+		str = str + "\n" + msg
+	}
+
+	return str
 }
