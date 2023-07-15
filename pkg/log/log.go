@@ -6,10 +6,10 @@ import (
 	"os"
 )
 
-var debugLogger = log.New(os.Stdout, "DEBUG: ", log.LstdFlags|log.Lmsgprefix)
-var verboseLogger = log.New(os.Stdout, " INFO: ", log.LstdFlags|log.Lmsgprefix)
-var errorLogger = log.New(os.Stderr, "ERROR: ", log.LstdFlags|log.Lmsgprefix)
-var warnLogger = log.New(os.Stdout, " WARN: ", log.LstdFlags|log.Lmsgprefix)
+var debugLogger = log.New(os.Stdout, "DEBUG: ", 0)
+var verboseLogger = log.New(os.Stdout, " INFO: ", 0)
+var errorLogger = log.New(os.Stderr, "ERROR: ", 0)
+var warnLogger = log.New(os.Stdout, " WARN: ", 0)
 
 type logLevel byte
 
