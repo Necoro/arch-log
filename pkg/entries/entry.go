@@ -2,6 +2,7 @@ package entries
 
 import (
 	"errors"
+	"fmt"
 	"time"
 )
 
@@ -12,4 +13,15 @@ type Entry struct {
 	Summary    string
 	Message    string
 	Author     string
+}
+
+func (e Entry) timeStr() string {
+	if e.CommitTime.IsZero() {
+		return "(unknown commit time)"
+	}
+	return e.CommitTime.Local().Format(time.DateTime)
+}
+
+func (e Entry) Format() string {
+	return fmt.Sprintf("%-24s %s", e.timeStr(), e.Summary)
 }

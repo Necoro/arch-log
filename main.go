@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"sort"
 
 	"github.com/Necoro/arch-log/pkg/entries"
 	"github.com/Necoro/arch-log/pkg/entries/arch"
@@ -27,8 +28,17 @@ func init() {
 	flag.BoolVar(&aurForce, "aur", aurForce, "force usage of AUR")
 }
 
-func formatEntryList(list []entries.Entry) {
-	log.Debugf("Received entries: %+v", list)
+func formatEntryList(entryList []entries.Entry) {
+	log.Debugf("Received entries: %+v", entryList)
+
+	sort.SliceStable(entryList, func(i, j int) bool {
+		return entryList[i].CommitTime.Before(entryList[j].CommitTime)
+	})
+
+	for _, e := range entryList {
+		fmt.Println(e.Format())
+		fmt.Println("--------------")
+	}
 }
 
 func handleEntries(what string, pkg string, f func(string) ([]entries.Entry, error)) (bool, error) {
