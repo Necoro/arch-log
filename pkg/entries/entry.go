@@ -5,9 +5,16 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/fatih/color"
 )
 
 var ErrNotFound = errors.New("package could not be found remotely")
+
+var (
+	timeColor    = color.New(color.FgYellow, color.Bold).Sprint
+	summaryColor = color.New(color.Bold).Sprint
+)
 
 type Entry struct {
 	CommitTime time.Time
@@ -24,7 +31,7 @@ func (e Entry) timeStr() string {
 }
 
 func (e Entry) Format() string {
-	str := fmt.Sprintf("%-24s %s", e.timeStr(), e.Summary)
+	str := fmt.Sprintf("%-24s %s", timeColor(e.timeStr()), summaryColor(e.Summary))
 	msg := strings.TrimSpace(e.Message)
 
 	if msg != "" {
