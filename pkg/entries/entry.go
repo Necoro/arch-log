@@ -14,6 +14,7 @@ var ErrNotFound = errors.New("package could not be found remotely")
 var (
 	timeColor    = color.New(color.FgYellow, color.Bold).Sprint
 	summaryColor = color.New(color.Bold).Sprint
+	tagColor     = color.New(color.FgGreen).Sprint
 )
 
 type Entry struct {
@@ -21,6 +22,7 @@ type Entry struct {
 	Summary    string
 	Message    string
 	Author     string
+	Tag        string
 }
 
 func (e Entry) timeStr() string {
@@ -31,7 +33,11 @@ func (e Entry) timeStr() string {
 }
 
 func (e Entry) Format() string {
-	str := fmt.Sprintf("%-24s %s", timeColor(e.timeStr()), summaryColor(e.Summary))
+	tag := e.Tag
+	if tag != "" {
+		tag = tagColor("(" + tag + ")")
+	}
+	str := fmt.Sprintf("%-24s %s %s", timeColor(e.timeStr()), tag, summaryColor(e.Summary))
 	msg := strings.TrimSpace(e.Message)
 
 	if msg != "" {
