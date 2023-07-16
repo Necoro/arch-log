@@ -14,6 +14,8 @@ import (
 	"github.com/Necoro/arch-log/pkg/log"
 )
 
+const VERSION = "0.1.0"
+
 // flags
 var (
 	printVersion bool = false
@@ -85,7 +87,7 @@ func fetch(pkg string) (notfound bool, err error) {
 func run() error {
 	flag.Parse()
 	if printVersion {
-		println("arch-log v. devel")
+		println("arch-log v. " + VERSION)
 		return nil
 	}
 
