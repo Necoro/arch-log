@@ -2,6 +2,8 @@
 
 `arch-log` is a small program that displays the commit messages of Arch packages. It queries both Arch's central repo and the AUR.
 
+It is available on AUR: https://aur.archlinux.org/packages/arch-log
+
 ### Rationale
 If you have multiple custom packages in Arch, you know the drag: You notice that some package of which you have a custom fork (or just an AUR package with long compile time) has a new version -- but only the pkgrel has changed.
 
