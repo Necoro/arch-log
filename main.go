@@ -24,6 +24,7 @@ var (
 	aurForce     bool = false
 	reverse      bool = false
 	number       int  = 10
+	shortLog     bool = false
 )
 
 func init() {
@@ -33,9 +34,21 @@ func init() {
 	flag.BoolVar(&aurForce, "aur", aurForce, "force usage of AUR")
 	flag.BoolVar(&reverse, "r", reverse, "reverse order of commits")
 	flag.IntVar(&number, "n", number, "max number of commits to show")
+	flag.BoolVar(&shortLog, "s", shortLog, "short concise log messages")
 }
 
 var timeLess = time.Time.Before
+
+func maxTagLength(entryList []entries.Entry) int {
+	maxTL := 0
+	for _, e := range entryList {
+		if maxTL < len(e.Tag) {
+			maxTL = len(e.Tag)
+		}
+	}
+
+	return maxTL
+}
 
 func formatEntryList(entryList []entries.Entry) {
 	log.Debugf("Received entries: %+v", entryList)
@@ -52,9 +65,15 @@ func formatEntryList(entryList []entries.Entry) {
 		}
 	}
 
+	maxTL := maxTagLength(entryList)
+
 	for _, e := range entryList {
-		fmt.Println(e.Format())
-		fmt.Println("--------------")
+		if shortLog {
+			fmt.Println(e.ShortFormat(maxTL))
+		} else {
+			fmt.Println(e.Format())
+			fmt.Println("--------------")
+		}
 	}
 }
 
