@@ -24,4 +24,8 @@ As I'm tired of clicking through different web interfaces, and I don't know of a
 
 ### How does it look like?
 
+#### Default
 ![Example](https://necoro.dev/data/example_arch-log.png)
+
+#### Long
+![Example Long](https://necoro.dev/data/example_arch-log_long.png)
