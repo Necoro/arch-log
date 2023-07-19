@@ -2,11 +2,12 @@ package main
 
 import (
 	"errors"
-	"flag"
 	"fmt"
 	"os"
 	"sort"
 	"time"
+
+	flag "github.com/spf13/pflag"
 
 	"github.com/Necoro/arch-log/pkg/entries"
 	"github.com/Necoro/arch-log/pkg/entries/arch"
@@ -15,26 +16,29 @@ import (
 )
 
 const VERSION = "0.2.0"
+const PROG_NAME = "arch-log"
+
+var versionMsg = errors.New(PROG_NAME + " v." + VERSION)
 
 // flags
-var (
-	printVersion bool = false
-	debug        bool = false
-	archForce    bool = false
-	aurForce     bool = false
-	reverse      bool = false
-	number       int  = 10
-	longLog      bool = false
-)
+var options struct {
+	printVersion bool
+	debug        bool
+	arch         bool
+	aur          bool
+	reverse      bool
+	number       int
+	longLog      bool
+}
 
 func init() {
-	flag.BoolVar(&printVersion, "version", printVersion, "print version and exit")
-	flag.BoolVar(&debug, "d", debug, "enable debug output")
-	flag.BoolVar(&archForce, "arch", archForce, "force usage of Arch git")
-	flag.BoolVar(&aurForce, "aur", aurForce, "force usage of AUR")
-	flag.BoolVar(&reverse, "r", reverse, "reverse order of commits")
-	flag.IntVar(&number, "n", number, "max number of commits to show")
-	flag.BoolVar(&longLog, "l", longLog, "slightly verbose log messages")
+	flag.BoolVar(&options.printVersion, "version", false, "print version and exit")
+	flag.BoolVarP(&options.debug, "debug", "d", false, "enable debug output")
+	flag.BoolVar(&options.arch, "arch", false, "force usage of Arch git")
+	flag.BoolVar(&options.aur, "aur", false, "force usage of AUR")
+	flag.BoolVarP(&options.reverse, "reverse", "r", false, "reverse order of commits")
+	flag.IntVarP(&options.number, "number", "n", 10, "max number of commits to show")
+	flag.BoolVarP(&options.longLog, "long", "l", false, "slightly verbose log messages")
 }
 
 var timeLess = time.Time.Before
@@ -57,18 +61,19 @@ func formatEntryList(entryList []entries.Entry) {
 		return timeLess(entryList[i].CommitTime, entryList[j].CommitTime)
 	})
 
-	if len(entryList) > number {
-		if reverse {
-			entryList = entryList[:number]
+	if len(entryList) > options.number {
+		if options.reverse {
+			entryList = entryList[:options.number]
 		} else {
-			entryList = entryList[len(entryList)-number:]
+			rest := len(entryList) - options.number
+			entryList = entryList[rest:]
 		}
 	}
 
 	maxTL := maxTagLength(entryList)
 
 	for _, e := range entryList {
-		if !longLog {
+		if !options.longLog {
 			fmt.Println(e.ShortFormat(maxTL))
 		} else {
 			fmt.Println(e.Format())
@@ -92,41 +97,53 @@ func handleEntries(what string, pkg string, f func(string) ([]entries.Entry, err
 }
 
 func fetch(pkg string) (notfound bool, err error) {
-	if !aurForce {
+
+	if !options.aur {
 		notfound, err = handleEntries("Arch", pkg, arch.GetEntries)
 	}
 
-	if aurForce || (err == nil && notfound && !archForce) {
+	if options.aur || (err == nil && notfound && !options.arch) {
 		notfound, err = handleEntries("AUR", pkg, aur.GetEntries)
 	}
 
 	return
 }
 
-func run() error {
+func parseFlags() (string, error) {
 	flag.Parse()
-	if printVersion {
-		println("arch-log v. " + VERSION)
-		return nil
+
+	if options.printVersion {
+		return "", versionMsg
 	}
 
-	if debug {
+	if options.debug {
 		log.SetDebug()
 	}
 
-	if reverse {
+	if options.reverse {
 		timeLess = time.Time.After
 	}
 
-	if aurForce && archForce {
+	if options.aur && options.arch {
 		log.Print("Forced both Arch and AUR, checking both.")
-		aurForce = false
-		archForce = false
+		options.aur = false
+		options.arch = false
 	}
 
 	pkg := flag.Arg(0)
 	if pkg == "" {
-		return fmt.Errorf("no package specified")
+		return "", fmt.Errorf("no package specified")
+	}
+	return pkg, nil
+}
+
+func run() error {
+	pkg, err := parseFlags()
+	if err != nil {
+		if errors.Is(err, versionMsg) {
+			return nil
+		}
+		return err
 	}
 
 	if nf, err := fetch(pkg); err != nil {
@@ -134,9 +151,9 @@ func run() error {
 	} else if nf {
 		var msg string
 		switch {
-		case aurForce:
+		case options.aur:
 			msg = "could not be found on AUR"
-		case archForce:
+		case options.arch:
 			msg = "could not be found on Arch"
 		default:
 			msg = "could neither be found on Arch nor AUR"
