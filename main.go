@@ -96,17 +96,36 @@ func handleEntries(what string, pkg string, f func(string) ([]entries.Entry, err
 	}
 }
 
-func fetch(pkg string) (notfound bool, err error) {
+func fetch(pkg string) (err error) {
+	var notfound bool
 
 	if !options.aur {
-		notfound, err = handleEntries("Arch", pkg, arch.GetEntries)
+		if notfound, err = handleEntries("Arch", pkg, arch.GetEntries); err != nil {
+			return
+		}
 	}
 
-	if options.aur || (err == nil && notfound && !options.arch) {
-		notfound, err = handleEntries("AUR", pkg, aur.GetEntries)
+	if options.aur || (notfound && !options.arch) {
+		if notfound, err = handleEntries("AUR", pkg, aur.GetEntries); err != nil {
+			return
+		}
 	}
 
-	return
+	if notfound {
+		var msg string
+		switch {
+		case options.aur:
+			msg = "could not be found on AUR"
+		case options.arch:
+			msg = "could not be found on Arch"
+		default:
+			msg = "could neither be found on Arch nor AUR"
+		}
+
+		return fmt.Errorf("package '%s' %s", pkg, msg)
+	}
+
+	return nil
 }
 
 func parseFlags() (string, error) {
@@ -146,23 +165,7 @@ func run() error {
 		return err
 	}
 
-	if nf, err := fetch(pkg); err != nil {
-		return err
-	} else if nf {
-		var msg string
-		switch {
-		case options.aur:
-			msg = "could not be found on AUR"
-		case options.arch:
-			msg = "could not be found on Arch"
-		default:
-			msg = "could neither be found on Arch nor AUR"
-		}
-
-		return fmt.Errorf("package '%s' %s", pkg, msg)
-	}
-
-	return nil
+	return fetch(pkg)
 }
 
 func main() {
