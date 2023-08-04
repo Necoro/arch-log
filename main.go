@@ -18,7 +18,7 @@ import (
 const VERSION = "0.2.0"
 const PROG_NAME = "arch-log"
 
-var versionMsg = errors.New(PROG_NAME + " v." + VERSION)
+var versionMsg = PROG_NAME + " v" + VERSION
 
 // flags
 var options struct {
@@ -129,10 +129,21 @@ func fetch(pkg string) (err error) {
 }
 
 func parseFlags() (string, error) {
-	flag.Parse()
+	// overwrite errorHandling mode
+	flag.CommandLine.Init(os.Args[0], flag.ContinueOnError)
+
+	if err := flag.CommandLine.Parse(os.Args[1:]); err != nil {
+		if !errors.Is(err, flag.ErrHelp) {
+			log.Errorf("%v\n\n", err)
+			flag.Usage()
+		}
+
+		return "", nil
+	}
 
 	if options.printVersion {
-		return "", versionMsg
+		println(versionMsg)
+		return "", nil
 	}
 
 	if options.debug {
@@ -158,10 +169,7 @@ func parseFlags() (string, error) {
 
 func run() error {
 	pkg, err := parseFlags()
-	if err != nil {
-		if errors.Is(err, versionMsg) {
-			return nil
-		}
+	if err != nil || pkg == "" {
 		return err
 	}
 
