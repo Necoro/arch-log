@@ -16,7 +16,7 @@ import (
 	"github.com/Necoro/arch-log/pkg/log"
 )
 
-const VERSION = "0.2.1"
+const VERSION = "0.3.0"
 const PROG_NAME = "arch-log"
 
 var versionMsg = PROG_NAME + " v" + VERSION
