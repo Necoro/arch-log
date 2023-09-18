@@ -27,5 +27,10 @@ As I'm tired of clicking through different web interfaces, and I don't know of a
 #### Default
 ![Example](https://necoro.dev/data/example_arch-log.png)
 
+#### With repo information
+This is shown, when Arch repos differ (e.g. there is a new version in testing)
+
+![Example Repo](https://necoro.dev/data/example_arch-log_repos.png)
+
 #### Long
 ![Example Long](https://necoro.dev/data/example_arch-log_long.png)

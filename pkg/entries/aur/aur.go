@@ -2,6 +2,7 @@ package aur
 
 import (
 	"encoding/xml"
+	"errors"
 	"strings"
 	"time"
 
@@ -84,7 +85,11 @@ func convert(xmlEntries []entry) []entries.Entry {
 	return entryList
 }
 
-func GetEntries(pkg string) ([]entries.Entry, error) {
+func GetEntries(pkg, repo string) ([]entries.Entry, error) {
+	if repo != "" {
+		return nil, errors.New("repo is not supported by AUR")
+	}
+
 	basePkg, err := determineBasePkg(pkg)
 	if err != nil {
 		return nil, err

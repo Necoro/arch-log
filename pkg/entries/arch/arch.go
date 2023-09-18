@@ -87,27 +87,45 @@ func groupTag(tags []tag) map[string]string {
 	return m
 }
 
-func convert(commits []commit, tags []tag) []entries.Entry {
-	entryList := make([]entries.Entry, len(commits))
+func convert(commits []commit, tags []tag, repoInfo repoInfo) []entries.Entry {
+	entryList := make([]entries.Entry, 0, len(commits))
 	tagMap := groupTag(tags)
+	constrain, constrainRepo := repoInfo.constrainToRepo()
+	printRepo := !constrain
 
-	for i, c := range commits {
+	if constrain {
+		log.Printf("Restricting commits to repo '%s'", constrainRepo)
+	}
+
+	for _, c := range commits {
 		log.Debugf("Fetched commit %+v", c)
 
-		entryList[i] = entries.Entry{
-			CommitTime: c.convertTime(),
-			Author:     c.Author,
-			Summary:    c.Title,
-			Message:    c.cleanedMessage(),
-			Tag:        tagMap[c.Id],
+		tag := tagMap[c.Id]
+		repo := repoInfo[tag]
+
+		if !constrain || constrainRepo == repo {
+			constrain = false
+
+			e := entries.Entry{
+				CommitTime: c.convertTime(),
+				Author:     c.Author,
+				Summary:    c.Title,
+				Message:    c.cleanedMessage(),
+				Tag:        tagMap[c.Id]}
+
+			if printRepo {
+				e.RepoInfo = repo
+			}
+
+			entryList = append(entryList, e)
 		}
 	}
 	return entryList
 }
 
 //goland:noinspection GoImportUsedAsName
-func GetEntries(pkg string) ([]entries.Entry, error) {
-	basePkg, err := determineBasePkg(pkg)
+func GetEntries(pkg, repo string) ([]entries.Entry, error) {
+	basePkg, repoInfo, err := determineBaseInfo(pkg, repo)
 	if err != nil {
 		return nil, err
 	}
@@ -127,5 +145,5 @@ func GetEntries(pkg string) ([]entries.Entry, error) {
 		return nil, err
 	}
 
-	return convert(commits, tags), nil
+	return convert(commits, tags, repoInfo), nil
 }
