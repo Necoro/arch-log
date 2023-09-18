@@ -190,7 +190,7 @@ func parseFlags() (string, error) {
 		log.Debug("Found repo 'AUR', assuming '--aur'")
 		options.aur = true
 		options.repo = ""
-	} else {
+	} else if options.repo != "" {
 		log.Debug("Repo is given, assuming '--arch'")
 		options.arch = true
 	}
