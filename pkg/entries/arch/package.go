@@ -19,6 +19,10 @@ type result struct {
 	PkgRel  string
 }
 
+func (r result) tagName() string {
+	return r.PkgVer + "-" + r.PkgRel
+}
+
 type infos struct {
 	Results []result
 }
@@ -60,45 +64,59 @@ func fetchPkgInfo(url, repo string) (result, repoInfo, error) {
 	}
 
 	r := infos.Results[0]
+	if len(infos.Results) == 1 && repo != "" && r.Repo != repo {
+		return result{}, nil, fmt.Errorf("package '%s' only found in repo '%s', but '%s' has been requested",
+			r.PkgName, r.Repo, repo)
+	}
 
-	if len(infos.Results) > 1 && repo == "" {
-		repoInfo = make(map[string]string)
-		for _, r := range infos.Results {
-			tagName := r.PkgVer + "-" + r.PkgRel
-			repoInfo[tagName] = r.Repo
+	if len(infos.Results) > 1 {
+		repoInfo, err = buildRepoInfo(repo, infos.Results)
+		if err != nil {
+			return result{}, nil, err
 		}
-	} else if len(infos.Results) > 1 && repo != "" {
-		repoInfo = make(map[string]string)
+	}
+
+	return r, repoInfo, nil
+}
+
+func reposString(results []result) string {
+	sb := strings.Builder{}
+
+	for i, r := range results {
+		if i > 0 {
+			sb.WriteString(", ")
+		}
+		sb.WriteRune('\'')
+		sb.WriteString(r.Repo)
+		sb.WriteRune('\'')
+	}
+
+	return sb.String()
+}
+
+func buildRepoInfo(repo string, results []result) (repoInfo, error) {
+	repoInfo := make(map[string]string)
+
+	if repo == "" {
+		for _, r := range results {
+			repoInfo[r.tagName()] = r.Repo
+		}
+	} else {
 		found := false
-		for _, r := range infos.Results {
+		for _, r := range results {
 			if r.Repo == repo {
-				tagName := r.PkgVer + "-" + r.PkgRel
-				repoInfo[tagName] = r.Repo
+				repoInfo[r.tagName()] = r.Repo
 				found = true
 			}
 		}
 
 		if !found {
-			sb := strings.Builder{}
-
-			for i, r := range infos.Results {
-				if i > 0 {
-					sb.WriteString(", ")
-				}
-				sb.WriteRune('\'')
-				sb.WriteString(r.Repo)
-				sb.WriteRune('\'')
-			}
-
-			return result{}, nil, fmt.Errorf("package '%s' only found in repos %s, but '%s' has been requested",
-				r.PkgName, sb.String(), repo)
+			repos := reposString(results)
+			return nil, fmt.Errorf("package '%s' only found in repos %s, but '%s' has been requested",
+				results[0].PkgName, repos, repo)
 		}
-	} else if r.Repo != repo {
-		return result{}, nil, fmt.Errorf("package '%s' only found in repo '%s', but '%s' has been requested",
-			r.PkgName, r.Repo, repo)
 	}
-
-	return r, repoInfo, nil
+	return repoInfo, nil
 }
 
 func determineBaseInfo(pkg, repo string) (string, repoInfo, error) {
