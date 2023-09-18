@@ -43,16 +43,26 @@ func init() {
 
 var timeLess = time.Time.Before
 
-func maxTagLength(entryList []entries.Entry) int {
-	maxTL := 0
-	for _, e := range entryList {
-		if maxTL < len(e.Tag) {
-			maxTL = len(e.Tag)
+func maxLength(f func(entries.Entry) string) func(entryList []entries.Entry) int {
+	return func(entryList []entries.Entry) int {
+		max := 0
+		for _, e := range entryList {
+			if max < len(f(e)) {
+				max = len(f(e))
+			}
 		}
-	}
 
-	return maxTL
+		return max
+	}
 }
+
+var maxTagLength = maxLength(func(entry entries.Entry) string {
+	return entry.Tag
+})
+
+var maxRepoLength = maxLength(func(entry entries.Entry) string {
+	return entry.RepoInfo
+})
 
 func formatEntryList(entryList []entries.Entry) {
 	log.Debugf("Received entries: %+v", entryList)
@@ -71,10 +81,11 @@ func formatEntryList(entryList []entries.Entry) {
 	}
 
 	maxTL := maxTagLength(entryList)
+	maxRL := maxRepoLength(entryList)
 
 	for _, e := range entryList {
 		if !options.longLog {
-			fmt.Println(e.ShortFormat(maxTL))
+			fmt.Println(e.ShortFormat(maxTL, maxRL))
 		} else {
 			fmt.Println(e.Format())
 			fmt.Println("--------------")

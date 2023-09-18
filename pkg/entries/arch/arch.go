@@ -87,12 +87,15 @@ func groupTag(tags []tag) map[string]string {
 	return m
 }
 
-func convert(commits []commit, tags []tag) []entries.Entry {
+func convert(commits []commit, tags []tag, repoInfo repoInfo) []entries.Entry {
 	entryList := make([]entries.Entry, len(commits))
 	tagMap := groupTag(tags)
 
 	for i, c := range commits {
 		log.Debugf("Fetched commit %+v", c)
+
+		tag := tagMap[c.Id]
+		repo := repoInfo[tag]
 
 		entryList[i] = entries.Entry{
 			CommitTime: c.convertTime(),
@@ -100,6 +103,7 @@ func convert(commits []commit, tags []tag) []entries.Entry {
 			Summary:    c.Title,
 			Message:    c.cleanedMessage(),
 			Tag:        tagMap[c.Id],
+			RepoInfo:   repo,
 		}
 	}
 	return entryList
@@ -107,7 +111,7 @@ func convert(commits []commit, tags []tag) []entries.Entry {
 
 //goland:noinspection GoImportUsedAsName
 func GetEntries(pkg string) ([]entries.Entry, error) {
-	basePkg, err := determineBasePkg(pkg)
+	basePkg, repoInfo, err := determineBaseInfo(pkg)
 	if err != nil {
 		return nil, err
 	}
@@ -127,5 +131,5 @@ func GetEntries(pkg string) ([]entries.Entry, error) {
 		return nil, err
 	}
 
-	return convert(commits, tags), nil
+	return convert(commits, tags, repoInfo), nil
 }
