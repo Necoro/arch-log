@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"strings"
 	"time"
 
 	flag "github.com/spf13/pflag"
@@ -26,6 +27,7 @@ var options struct {
 	debug        bool
 	arch         bool
 	aur          bool
+	repo         string
 	reverse      bool
 	number       int
 	longLog      bool
@@ -39,6 +41,7 @@ func init() {
 	flag.BoolVarP(&options.reverse, "reverse", "r", false, "reverse order of commits")
 	flag.IntVarP(&options.number, "number", "n", 10, "max number of commits to show")
 	flag.BoolVarP(&options.longLog, "long", "l", false, "slightly verbose log messages")
+	flag.StringVar(&options.repo, "repo", "", "restrict to repo (e.g. \"extra\")")
 }
 
 var timeLess = time.Time.Before
@@ -93,10 +96,10 @@ func formatEntryList(entryList []entries.Entry) {
 	}
 }
 
-func handleEntries(what string, pkg string, f func(string) ([]entries.Entry, error)) (bool, error) {
+func handleEntries(what string, pkg string, repo string, f func(string, string) ([]entries.Entry, error)) (bool, error) {
 	log.Debug("Checking ", what)
 
-	if entryList, err := f(pkg); err == nil {
+	if entryList, err := f(pkg, repo); err == nil {
 		formatEntryList(entryList)
 		return false, nil
 	} else if errors.Is(err, entries.ErrNotFound) {
@@ -111,13 +114,13 @@ func fetch(pkg string) (err error) {
 	var notfound bool
 
 	if !options.aur {
-		if notfound, err = handleEntries("Arch", pkg, arch.GetEntries); err != nil {
+		if notfound, err = handleEntries("Arch", pkg, options.repo, arch.GetEntries); err != nil {
 			return
 		}
 	}
 
 	if options.aur || (notfound && !options.arch) {
-		if notfound, err = handleEntries("AUR", pkg, aur.GetEntries); err != nil {
+		if notfound, err = handleEntries("AUR", pkg, options.repo, aur.GetEntries); err != nil {
 			return
 		}
 	}
@@ -165,16 +168,39 @@ func parseFlags() (string, error) {
 		timeLess = time.Time.After
 	}
 
+	pkg := flag.Arg(0)
+	if pkg == "" {
+		return "", errors.New("no package specified")
+	}
+
+	if idx := strings.IndexRune(pkg, '/'); idx > -1 {
+		repo := pkg[:idx]
+		pkg = pkg[idx+1:]
+
+		log.Debugf("Split package name into repo '%s' and pkg '%s'.", repo, pkg)
+
+		if options.repo == "" {
+			options.repo = repo
+		} else if options.repo != repo {
+			return "", fmt.Errorf("conflicting repos specified: '%s' vs '%s'", options.repo, repo)
+		}
+	}
+
+	if strings.ToLower(options.repo) == "aur" {
+		log.Debug("Found repo 'AUR', assuming '--aur'")
+		options.aur = true
+		options.repo = ""
+	} else {
+		log.Debug("Repo is given, assuming '--arch'")
+		options.arch = true
+	}
+
 	if options.aur && options.arch {
 		log.Print("Forced both Arch and AUR, checking both.")
 		options.aur = false
 		options.arch = false
 	}
 
-	pkg := flag.Arg(0)
-	if pkg == "" {
-		return "", fmt.Errorf("no package specified")
-	}
 	return pkg, nil
 }
 

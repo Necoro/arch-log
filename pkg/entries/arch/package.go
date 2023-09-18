@@ -2,7 +2,9 @@ package arch
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/url"
+	"strings"
 
 	"github.com/Necoro/arch-log/pkg/entries"
 	"github.com/Necoro/arch-log/pkg/http"
@@ -23,11 +25,21 @@ type infos struct {
 
 type repoInfo map[string]string
 
+func (r repoInfo) constrainToRepo() (bool, string) {
+	if len(r) == 1 {
+		for _, v := range r {
+			return true, v
+		}
+	}
+
+	return false, ""
+}
+
 func buildPkgUrl(pkg string) string {
 	return "https://archlinux.org/packages/search/json/?name=" + url.QueryEscape(pkg)
 }
 
-func fetchPkgInfo(url string) (result, repoInfo, error) {
+func fetchPkgInfo(url, repo string) (result, repoInfo, error) {
 	res, err := http.Fetch(url)
 	if err != nil {
 		return result{}, nil, err
@@ -45,24 +57,58 @@ func fetchPkgInfo(url string) (result, repoInfo, error) {
 	var repoInfo repoInfo
 	if len(infos.Results) == 0 {
 		return result{}, repoInfo, entries.ErrNotFound
-	} else if len(infos.Results) > 1 {
+	}
+
+	r := infos.Results[0]
+
+	if len(infos.Results) > 1 && repo == "" {
 		repoInfo = make(map[string]string)
 		for _, r := range infos.Results {
 			tagName := r.PkgVer + "-" + r.PkgRel
 			repoInfo[tagName] = r.Repo
 		}
+	} else if len(infos.Results) > 1 && repo != "" {
+		repoInfo = make(map[string]string)
+		found := false
+		for _, r := range infos.Results {
+			if r.Repo == repo {
+				tagName := r.PkgVer + "-" + r.PkgRel
+				repoInfo[tagName] = r.Repo
+				found = true
+			}
+		}
+
+		if !found {
+			sb := strings.Builder{}
+
+			for i, r := range infos.Results {
+				if i > 0 {
+					sb.WriteString(", ")
+				}
+				sb.WriteRune('\'')
+				sb.WriteString(r.Repo)
+				sb.WriteRune('\'')
+			}
+
+			return result{}, nil, fmt.Errorf("package '%s' only found in repos %s, but '%s' has been requested",
+				r.PkgName, sb.String(), repo)
+		}
+	} else if r.Repo != repo {
+		return result{}, nil, fmt.Errorf("package '%s' only found in repo '%s', but '%s' has been requested",
+			r.PkgName, r.Repo, repo)
 	}
 
-	return infos.Results[0], repoInfo, nil
+	return r, repoInfo, nil
 }
 
-func determineBaseInfo(pkg string) (string, repoInfo, error) {
+func determineBaseInfo(pkg, repo string) (string, repoInfo, error) {
 	url := buildPkgUrl(pkg)
-	result, repoInfo, err := fetchPkgInfo(url)
+	result, repoInfo, err := fetchPkgInfo(url, repo)
 
 	if err != nil {
 		return "", nil, err
 	}
+
 	log.Debugf("Pkg Info from Arch: %+v", result)
 
 	return result.PkgBase, repoInfo, nil
