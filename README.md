@@ -34,3 +34,11 @@ This is shown, when Arch repos differ (e.g. there is a new version in testing)
 
 #### Long
 ![Example Long](https://necoro.dev/data/example_arch-log_long.png)
+
+## Support
+
+Thanks to [JetBrains][jb] for supporting this project.
+
+[![JetBrains](https://necoro.dev/data/jetbrains_small2.png)][jb]
+
+[jb]: https://www.jetbrains.com/?from=feed2imap-go
