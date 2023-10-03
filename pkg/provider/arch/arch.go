@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/Necoro/arch-log/pkg/entries"
-	"github.com/Necoro/arch-log/pkg/http"
 	"github.com/Necoro/arch-log/pkg/log"
+	"github.com/Necoro/arch-log/pkg/provider"
 )
 
 type commit struct {
@@ -50,7 +50,7 @@ func (e commit) cleanedMessage() string {
 }
 
 func fetch(url string, jsonEntries any) error {
-	result, err := http.Fetch(url)
+	result, err := provider.Fetch(url)
 	if err != nil {
 		return err
 	}
@@ -162,7 +162,7 @@ func GetPkgBuild(pkg, repo string) (io.ReadCloser, error) {
 	commitRef := repoInfo.refConstraint()
 
 	url := buildPkgBuildUrl(basePkg, commitRef)
-	body, err := http.Fetch(url)
+	body, err := provider.Fetch(url)
 	if err != nil {
 		body.Close()
 		return nil, err

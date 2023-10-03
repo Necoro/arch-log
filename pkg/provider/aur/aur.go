@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/Necoro/arch-log/pkg/entries"
-	"github.com/Necoro/arch-log/pkg/http"
 	"github.com/Necoro/arch-log/pkg/log"
+	"github.com/Necoro/arch-log/pkg/provider"
 )
 
 type feed struct {
@@ -56,7 +56,7 @@ func buildUrl(pkg, verb string) string {
 }
 
 func fetch(url string) ([]entry, error) {
-	result, err := http.Fetch(url)
+	result, err := provider.Fetch(url)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +92,7 @@ func setupFetch(pkg, repo string) (string, error) {
 		return "", errors.New("repo is not supported by AUR")
 	}
 
-	basePkg, err := determineBasePkg(pkg)
+	basePkg, err := DetermineBasePkg(pkg)
 	if err != nil {
 		return "", err
 	}
@@ -124,9 +124,8 @@ func GetPkgBuild(pkg, repo string) (io.ReadCloser, error) {
 	}
 
 	url := buildUrl(basePkg, "plain/PKGBUILD")
-	body, err := http.Fetch(url)
+	body, err := provider.Fetch(url)
 	if err != nil {
-		body.Close()
 		return nil, err
 	}
 

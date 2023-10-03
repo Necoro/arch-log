@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/Necoro/arch-log/pkg/entries"
-	"github.com/Necoro/arch-log/pkg/http"
 	"github.com/Necoro/arch-log/pkg/log"
+	"github.com/Necoro/arch-log/pkg/provider"
 )
 
 type result struct {
@@ -59,7 +59,7 @@ func buildPkgUrl(pkg string) string {
 }
 
 func fetchPkgInfo(url, repo string) (result, repoInfo, error) {
-	res, err := http.Fetch(url)
+	res, err := provider.Fetch(url)
 	if err != nil {
 		return result{}, nil, err
 	}
@@ -149,4 +149,9 @@ func determineBaseInfo(pkg, repo string) (string, repoInfo, error) {
 	}
 
 	return result.PkgBase, repoInfo, nil
+}
+
+func DetermineBaseInfo(pkg, repo string) (string, error) {
+	bi, _, err := determineBaseInfo(pkg, repo)
+	return bi, err
 }

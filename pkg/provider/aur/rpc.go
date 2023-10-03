@@ -6,8 +6,8 @@ import (
 	"net/url"
 
 	"github.com/Necoro/arch-log/pkg/entries"
-	"github.com/Necoro/arch-log/pkg/http"
 	"github.com/Necoro/arch-log/pkg/log"
+	"github.com/Necoro/arch-log/pkg/provider"
 )
 
 type result struct {
@@ -24,7 +24,7 @@ func buildRpcUrl(pkg string) string {
 }
 
 func fetchRpcInfo(url string) (result, error) {
-	res, err := http.Fetch(url)
+	res, err := provider.Fetch(url)
 	if err != nil {
 		return result{}, err
 	}
@@ -47,7 +47,7 @@ func fetchRpcInfo(url string) (result, error) {
 	return infos.Results[0], nil
 }
 
-func determineBasePkg(pkg string) (string, error) {
+func DetermineBasePkg(pkg string) (string, error) {
 	url := buildRpcUrl(pkg)
 	result, err := fetchRpcInfo(url)
 
