@@ -1,6 +1,6 @@
 ## arch-log
 
-`arch-log` is a small program that displays the commit messages of Arch packages. It queries both Arch's central repo and the AUR.
+`arch-log` is a small program that displays the commit messages or `PKGBUILD` of Arch packages. It queries both Arch's central repo and the AUR.
 
 It is available on AUR: https://aur.archlinux.org/packages/arch-log
 
@@ -10,6 +10,8 @@ If you have multiple custom packages in Arch, you know the drag: You notice that
 The question then is: Do I need to rebuild / rebase / ... or can I ignore the change. To make this decision, it is necessary to have the package's changelog in quick access.
 
 As I'm tired of clicking through different web interfaces, and I don't know of any other tool that provides this: `arch-log` was born.
+
+Additionally, while not really a *log*, it also has the capability of show the `PKGBUILD` of a package. Just for convenience's sake.
 
 ### What does it do?
 
