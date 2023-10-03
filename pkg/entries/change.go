@@ -19,7 +19,7 @@ var (
 	startColor   = color.New(color.FgGreen, color.Bold)
 )
 
-type Entry struct {
+type Change struct {
 	CommitTime time.Time
 	Summary    string
 	Message    string
@@ -28,52 +28,52 @@ type Entry struct {
 	RepoInfo   string
 }
 
-func (e Entry) formatTime(format string) string {
-	if e.CommitTime.IsZero() {
+func (c Change) formatTime(format string) string {
+	if c.CommitTime.IsZero() {
 		return ""
 	}
-	return e.CommitTime.Local().Format(format)
+	return c.CommitTime.Local().Format(format)
 }
 
-func (e Entry) timeStr() string {
-	return e.formatTime(time.DateTime)
+func (c Change) timeStr() string {
+	return c.formatTime(time.DateTime)
 }
 
-func (e Entry) dateStr() string {
-	return e.formatTime(time.DateOnly)
+func (c Change) dateStr() string {
+	return c.formatTime(time.DateOnly)
 }
 
-func (e Entry) tagStr() string {
-	if e.Tag != "" {
-		return "(" + e.Tag + ")"
+func (c Change) tagStr() string {
+	if c.Tag != "" {
+		return "(" + c.Tag + ")"
 	}
 	return ""
 }
 
-func (e Entry) repoStr() string {
-	if e.RepoInfo != "" {
-		return "[" + e.RepoInfo + "]"
+func (c Change) repoStr() string {
+	if c.RepoInfo != "" {
+		return "[" + c.RepoInfo + "]"
 	}
 	return ""
 }
 
-func (e Entry) Format() string {
-	dateTime := timeColor.Sprintf("%-19s", e.timeStr())
+func (c Change) Format() string {
+	dateTime := timeColor.Sprintf("%-19s", c.timeStr())
 
-	tag := e.tagStr()
+	tag := c.tagStr()
 	if tag != "" {
 		tag = " " + tagColor.Sprint(tag)
 	}
 
-	repo := e.repoStr()
+	repo := c.repoStr()
 	if repo != "" {
 		repo = " " + repoColor.Sprint(repo)
 	}
 
-	summary := summaryColor.Sprint(e.Summary)
+	summary := summaryColor.Sprint(c.Summary)
 	str := fmt.Sprintf("%s%s%s %s", dateTime, tag, repo, summary)
 
-	msg := strings.TrimSpace(e.Message)
+	msg := strings.TrimSpace(c.Message)
 
 	if msg != "" {
 		str = str + "\n" + msg
@@ -82,26 +82,26 @@ func (e Entry) Format() string {
 	return str
 }
 
-func (e Entry) ShortFormat(tagLength, repoLength int) string {
+func (c Change) ShortFormat(tagLength, repoLength int) string {
 	start := startColor.Sprint("*")
-	date := timeColor.Sprintf("%10s", e.dateStr())
+	date := timeColor.Sprintf("%10s", c.dateStr())
 
 	tag := ""
 	if tagLength > 0 {
 		tagLength = tagLength + 2 // parens
-		tag = tagColor.Sprintf(" %*s", tagLength, e.tagStr())
+		tag = tagColor.Sprintf(" %*s", tagLength, c.tagStr())
 	}
 
 	repoInfo := ""
 	if repoLength > 0 {
 		repoLength = repoLength + 2 // []
-		repoInfo = repoColor.Sprintf(" %-*s", repoLength, e.repoStr())
+		repoInfo = repoColor.Sprintf(" %-*s", repoLength, c.repoStr())
 	}
 
-	summary := summaryColor.Sprint(e.Summary)
+	summary := summaryColor.Sprint(c.Summary)
 
 	msg := ""
-	if strings.TrimSpace(e.Message) != "" {
+	if strings.TrimSpace(c.Message) != "" {
 		msg = " [...]"
 	}
 

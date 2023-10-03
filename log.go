@@ -6,15 +6,15 @@ import (
 	"sort"
 
 	"github.com/Necoro/arch-log/pkg/entries"
-	"github.com/Necoro/arch-log/pkg/entries/arch"
-	"github.com/Necoro/arch-log/pkg/entries/aur"
 	"github.com/Necoro/arch-log/pkg/log"
+	"github.com/Necoro/arch-log/pkg/provider/arch"
+	"github.com/Necoro/arch-log/pkg/provider/aur"
 )
 
-func maxLength(f func(entries.Entry) string) func(entryList []entries.Entry) int {
-	return func(entryList []entries.Entry) int {
+func maxLength(f func(entries.Change) string) func(changes []entries.Change) int {
+	return func(changes []entries.Change) int {
 		max := 0
-		for _, e := range entryList {
+		for _, e := range changes {
 			if max < len(f(e)) {
 				max = len(f(e))
 			}
@@ -24,48 +24,48 @@ func maxLength(f func(entries.Entry) string) func(entryList []entries.Entry) int
 	}
 }
 
-var maxTagLength = maxLength(func(entry entries.Entry) string {
-	return entry.Tag
+var maxTagLength = maxLength(func(change entries.Change) string {
+	return change.Tag
 })
 
-var maxRepoLength = maxLength(func(entry entries.Entry) string {
-	return entry.RepoInfo
+var maxRepoLength = maxLength(func(change entries.Change) string {
+	return change.RepoInfo
 })
 
-func formatEntryList(entryList []entries.Entry) {
-	log.Debugf("Received entries: %+v", entryList)
+func formatEntryList(changes []entries.Change) {
+	log.Debugf("Received entries: %+v", changes)
 
-	sort.SliceStable(entryList, func(i, j int) bool {
-		return timeLess(entryList[i].CommitTime, entryList[j].CommitTime)
+	sort.SliceStable(changes, func(i, j int) bool {
+		return timeLess(changes[i].CommitTime, changes[j].CommitTime)
 	})
 
-	if len(entryList) > options.number {
+	if len(changes) > options.number {
 		if options.reverse {
-			entryList = entryList[:options.number]
+			changes = changes[:options.number]
 		} else {
-			rest := len(entryList) - options.number
-			entryList = entryList[rest:]
+			rest := len(changes) - options.number
+			changes = changes[rest:]
 		}
 	}
 
-	maxTL := maxTagLength(entryList)
-	maxRL := maxRepoLength(entryList)
+	maxTL := maxTagLength(changes)
+	maxRL := maxRepoLength(changes)
 
-	for _, e := range entryList {
+	for _, c := range changes {
 		if !options.longLog {
-			fmt.Println(e.ShortFormat(maxTL, maxRL))
+			fmt.Println(c.ShortFormat(maxTL, maxRL))
 		} else {
-			fmt.Println(e.Format())
+			fmt.Println(c.Format())
 			fmt.Println("--------------")
 		}
 	}
 }
 
-func handleEntries(what string, pkg string, repo string, f func(string, string) ([]entries.Entry, error)) (bool, error) {
+func handleEntries(what string, pkg string, repo string, f func(string, string) ([]entries.Change, error)) (bool, error) {
 	log.Debug("Checking ", what)
 
-	if entryList, err := f(pkg, repo); err == nil {
-		formatEntryList(entryList)
+	if changes, err := f(pkg, repo); err == nil {
+		formatEntryList(changes)
 		return false, nil
 	} else if errors.Is(err, entries.ErrNotFound) {
 		log.Debug("Not found on ", what)

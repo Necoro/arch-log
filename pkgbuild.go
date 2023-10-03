@@ -9,9 +9,9 @@ import (
 	"strings"
 
 	"github.com/Necoro/arch-log/pkg/entries"
-	"github.com/Necoro/arch-log/pkg/entries/arch"
-	"github.com/Necoro/arch-log/pkg/entries/aur"
 	"github.com/Necoro/arch-log/pkg/log"
+	"github.com/Necoro/arch-log/pkg/provider/arch"
+	"github.com/Necoro/arch-log/pkg/provider/aur"
 )
 
 func handleResult(what string, pkg string, repo string, f func(string, string) (io.ReadCloser, error)) (bool, error) {

@@ -72,22 +72,22 @@ func fetch(url string) ([]entry, error) {
 	return feed.Entries, nil
 }
 
-func convert(xmlEntries []entry) []entries.Entry {
-	entryList := make([]entries.Entry, len(xmlEntries))
+func convert(xmlEntries []entry) []entries.Change {
+	changes := make([]entries.Change, len(xmlEntries))
 	for i, xmlE := range xmlEntries {
 		log.Debugf("Fetched entry %+v", xmlE)
 
-		entryList[i] = entries.Entry{
+		changes[i] = entries.Change{
 			CommitTime: xmlE.convertTime(),
 			Author:     xmlE.Author,
 			Summary:    xmlE.Title,
 			Message:    xmlE.content(),
 		}
 	}
-	return entryList
+	return changes
 }
 
-func setupFetch(pkg string, repo string) (string, error) {
+func setupFetch(pkg, repo string) (string, error) {
 	if repo != "" {
 		return "", errors.New("repo is not supported by AUR")
 	}
@@ -103,7 +103,7 @@ func setupFetch(pkg string, repo string) (string, error) {
 	return basePkg, nil
 }
 
-func GetEntries(pkg, repo string) ([]entries.Entry, error) {
+func GetEntries(pkg, repo string) ([]entries.Change, error) {
 	basePkg, err := setupFetch(pkg, repo)
 	if err != nil {
 		return nil, err

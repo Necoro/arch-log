@@ -94,8 +94,8 @@ func groupTag(tags []tag) map[string]string {
 	return m
 }
 
-func convert(commits []commit, tags []tag, repoInfo repoInfo) []entries.Entry {
-	entryList := make([]entries.Entry, 0, len(commits))
+func convert(commits []commit, tags []tag, repoInfo repoInfo) []entries.Change {
+	changeList := make([]entries.Change, 0, len(commits))
 	tagMap := groupTag(tags)
 	constrain := repoInfo.isRestricted()
 	constrainRepo := repoInfo.repoConstraint()
@@ -114,7 +114,7 @@ func convert(commits []commit, tags []tag, repoInfo repoInfo) []entries.Entry {
 		if !constrain || constrainRepo == repo {
 			constrain = false
 
-			e := entries.Entry{
+			c := entries.Change{
 				CommitTime: c.convertTime(),
 				Author:     c.Author,
 				Summary:    c.Title,
@@ -122,17 +122,17 @@ func convert(commits []commit, tags []tag, repoInfo repoInfo) []entries.Entry {
 				Tag:        tagMap[c.Id]}
 
 			if printRepo {
-				e.RepoInfo = repo
+				c.RepoInfo = repo
 			}
 
-			entryList = append(entryList, e)
+			changeList = append(changeList, c)
 		}
 	}
-	return entryList
+	return changeList
 }
 
 //goland:noinspection GoImportUsedAsName
-func GetEntries(pkg, repo string) ([]entries.Entry, error) {
+func GetEntries(pkg, repo string) ([]entries.Change, error) {
 	basePkg, repoInfo, err := determineBaseInfo(pkg, repo)
 	if err != nil {
 		return nil, err
