@@ -6,8 +6,8 @@ import (
 	"os"
 )
 
-var debugLogger = log.New(os.Stdout, "DEBUG: ", 0)
-var verboseLogger = log.New(os.Stdout, " INFO: ", 0)
+var debugLogger = log.New(os.Stderr, "DEBUG: ", 0)
+var verboseLogger = log.New(os.Stderr, " INFO: ", 0)
 var errorLogger = log.New(os.Stderr, "ERROR: ", 0)
 var warnLogger = log.New(os.Stdout, " WARN: ", 0)
 
