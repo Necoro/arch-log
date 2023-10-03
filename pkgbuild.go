@@ -8,6 +8,7 @@ import (
 
 	"github.com/Necoro/arch-log/pkg/entries"
 	"github.com/Necoro/arch-log/pkg/entries/arch"
+	"github.com/Necoro/arch-log/pkg/entries/aur"
 	"github.com/Necoro/arch-log/pkg/log"
 )
 
@@ -34,11 +35,11 @@ func fetchPkgBuild(pkg string) (err error) {
 		}
 	}
 
-	//if options.aur || (notfound && !options.arch) {
-	//	if notfound, err = handleResult("AUR", pkg, options.repo, aur.GetEntries); err != nil {
-	//		return
-	//	}
-	//}
+	if options.aur || (notfound && !options.arch) {
+		if notfound, err = handleResult("AUR", pkg, options.repo, aur.GetPkgBuild); err != nil {
+			return
+		}
+	}
 
 	if notfound {
 		return notFoundError(pkg)
