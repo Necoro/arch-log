@@ -47,12 +47,10 @@ func checkAvailability(pkg string) (string, error) {
 	return analyzeARMData(resp)
 }
 
-type armData struct {
-	Data [][]string
-}
-
 func analyzeARMData(resp io.ReadCloser) (string, error) {
-	var data armData
+	var data struct {
+		Data [][]string
+	}
 
 	d := json.NewDecoder(resp)
 	if err := d.Decode(&data); err != nil {
