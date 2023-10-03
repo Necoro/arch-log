@@ -11,6 +11,7 @@ import (
 	"github.com/Necoro/arch-log/pkg/entries"
 	"github.com/Necoro/arch-log/pkg/log"
 	"github.com/Necoro/arch-log/pkg/provider/arch"
+	"github.com/Necoro/arch-log/pkg/provider/arm"
 	"github.com/Necoro/arch-log/pkg/provider/aur"
 )
 
@@ -30,7 +31,7 @@ func handleResult(what string, pkg string, repo string, f func(string, string) (
 
 func fetchPkgBuild(pkg string) error {
 	if options.arm || options.armOnly {
-		if done, err := handleResult("Arch ARM", pkg, options.repo, arch.GetPkgBuild); err != nil {
+		if done, err := handleResult("Arch ARM", pkg, options.repo, arm.GetPkgBuild); err != nil {
 			return err
 		} else if !done && options.armOnly {
 			return notFoundError(pkg)
