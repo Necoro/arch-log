@@ -27,16 +27,31 @@ type infos struct {
 	Results []result
 }
 
+// map from tag to repo
 type repoInfo map[string]string
 
-func (r repoInfo) constrainToRepo() (bool, string) {
-	if len(r) == 1 {
-		for _, v := range r {
-			return true, v
+func (r repoInfo) isRestricted() bool {
+	return len(r) == 1
+}
+
+func (r repoInfo) repoConstraint() string {
+	if r.isRestricted() {
+		for _, repo := range r {
+			return repo
 		}
 	}
 
-	return false, ""
+	return ""
+}
+
+func (r repoInfo) refConstraint() string {
+	if r.isRestricted() {
+		for tag := range r {
+			return tag
+		}
+	}
+
+	return "HEAD"
 }
 
 func buildPkgUrl(pkg string) string {
@@ -128,6 +143,10 @@ func determineBaseInfo(pkg, repo string) (string, repoInfo, error) {
 	}
 
 	log.Debugf("Pkg Info from Arch: %+v", result)
+
+	if result.PkgBase != pkg {
+		log.Printf("Mapped pkg '%s' to pkgbase '%s'", pkg, result.PkgBase)
+	}
 
 	return result.PkgBase, repoInfo, nil
 }
