@@ -3,6 +3,8 @@ package aur
 import (
 	"encoding/xml"
 	"errors"
+	"fmt"
+	"io"
 	"strings"
 	"time"
 
@@ -49,8 +51,8 @@ func (e entry) content() string {
 	return ""
 }
 
-func buildUrl(pkg string) string {
-	return "https://aur.archlinux.org/cgit/aur.git/atom/?h=" + pkg
+func buildUrl(pkg, verb string) string {
+	return fmt.Sprintf("https://aur.archlinux.org/cgit/aur.git/%s/?h=%s", verb, pkg)
 }
 
 func fetch(url string) ([]entry, error) {
@@ -85,23 +87,50 @@ func convert(xmlEntries []entry) []entries.Entry {
 	return entryList
 }
 
-func GetEntries(pkg, repo string) ([]entries.Entry, error) {
+func setupFetch(pkg string, repo string) (string, error) {
 	if repo != "" {
-		return nil, errors.New("repo is not supported by AUR")
+		return "", errors.New("repo is not supported by AUR")
 	}
 
 	basePkg, err := determineBasePkg(pkg)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
+
 	if basePkg != pkg {
 		log.Printf("Mapped pkg '%s' to pkgbase '%s'", pkg, basePkg)
 	}
+	return basePkg, nil
+}
 
-	url := buildUrl(basePkg)
+func GetEntries(pkg, repo string) ([]entries.Entry, error) {
+	basePkg, err := setupFetch(pkg, repo)
+	if err != nil {
+		return nil, err
+	}
+
+	url := buildUrl(basePkg, "atom")
 	xmlEntries, err := fetch(url)
 	if err != nil {
 		return nil, err
 	}
 	return convert(xmlEntries), nil
+}
+
+func GetPkgBuild(pkg, repo string) (io.ReadCloser, error) {
+	basePkg, err := setupFetch(pkg, repo)
+	if err != nil {
+		return nil, err
+	}
+
+	url := buildUrl(basePkg, "plain/PKGBUILD")
+	body, err := http.Fetch(url)
+	if err != nil {
+		body.Close()
+		return nil, err
+	}
+
+	log.Debugf("Fetching from AUR (%s) successful.", url)
+
+	return body, nil
 }
