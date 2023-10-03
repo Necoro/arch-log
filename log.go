@@ -75,6 +75,20 @@ func handleEntries(what string, pkg string, repo string, f func(string, string) 
 	}
 }
 
+func notFoundError(pkg string) error {
+	var msg string
+	switch {
+	case options.aur:
+		msg = "could not be found on AUR"
+	case options.arch:
+		msg = "could not be found on Arch"
+	default:
+		msg = "could neither be found on Arch nor AUR"
+	}
+
+	return fmt.Errorf("package '%s' %s", pkg, msg)
+}
+
 func fetchLog(pkg string) (err error) {
 	var notfound bool
 
@@ -91,17 +105,7 @@ func fetchLog(pkg string) (err error) {
 	}
 
 	if notfound {
-		var msg string
-		switch {
-		case options.aur:
-			msg = "could not be found on AUR"
-		case options.arch:
-			msg = "could not be found on Arch"
-		default:
-			msg = "could neither be found on Arch nor AUR"
-		}
-
-		return fmt.Errorf("package '%s' %s", pkg, msg)
+		return notFoundError(pkg)
 	}
 
 	return nil

@@ -2,6 +2,7 @@ package arch
 
 import (
 	"encoding/json"
+	"io"
 	"net/url"
 	"strings"
 	"time"
@@ -72,6 +73,12 @@ func buildTagsUrl(pkg string) string {
 	return buildUrl(pkg, "tags")
 }
 
+func buildPkgBuildUrl(pkg, ref string) string {
+	filePath := "files/PKGBUILD/raw?ref=" + url.QueryEscape(ref)
+
+	return buildUrl(pkg, filePath)
+}
+
 func buildUrl(pkg, action string) string {
 	repoName := url.QueryEscape("archlinux/packaging/packages/" + pkg)
 
@@ -90,7 +97,8 @@ func groupTag(tags []tag) map[string]string {
 func convert(commits []commit, tags []tag, repoInfo repoInfo) []entries.Entry {
 	entryList := make([]entries.Entry, 0, len(commits))
 	tagMap := groupTag(tags)
-	constrain, constrainRepo := repoInfo.constrainToRepo()
+	constrain := repoInfo.isRestricted()
+	constrainRepo := repoInfo.repoConstraint()
 	printRepo := !constrain
 
 	if constrain {
@@ -129,9 +137,6 @@ func GetEntries(pkg, repo string) ([]entries.Entry, error) {
 	if err != nil {
 		return nil, err
 	}
-	if basePkg != pkg {
-		log.Printf("Mapped pkg '%s' to pkgbase '%s'", pkg, basePkg)
-	}
 
 	url := buildCommitsUrl(basePkg)
 	var commits []commit
@@ -146,4 +151,24 @@ func GetEntries(pkg, repo string) ([]entries.Entry, error) {
 	}
 
 	return convert(commits, tags, repoInfo), nil
+}
+
+func GetPkgBuild(pkg, repo string) (io.ReadCloser, error) {
+	basePkg, repoInfo, err := determineBaseInfo(pkg, repo)
+	if err != nil {
+		return nil, err
+	}
+
+	commitRef := repoInfo.refConstraint()
+
+	url := buildPkgBuildUrl(basePkg, commitRef)
+	body, err := http.Fetch(url)
+	if err != nil {
+		body.Close()
+		return nil, err
+	}
+
+	log.Debugf("Fetching from Arch (%s) successful.", url)
+
+	return body, nil
 }
