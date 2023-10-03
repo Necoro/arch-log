@@ -39,7 +39,7 @@ func init() {
 	flag.IntVarP(&options.number, "number", "n", 10, "max number of commits to show")
 	flag.BoolVarP(&options.longLog, "long", "l", false, "slightly verbose log messages")
 	flag.StringVar(&options.repo, "repo", "", "restrict to repo (e.g. \"extra\")")
-	flag.BoolVarP(&options.pkgbuild, "pkgbuild", "p", false, "show PKGBUILD instead of the log")
+	flag.BoolVarP(&options.pkgbuild, "pkgbuild", "p", false, "show PKGBUILD instead of the log (honors PAGER)")
 }
 
 var timeLess = time.Time.Before

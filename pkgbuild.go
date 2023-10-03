@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
+	"strings"
 
 	"github.com/Necoro/arch-log/pkg/entries"
 	"github.com/Necoro/arch-log/pkg/entries/arch"
@@ -51,8 +53,37 @@ func fetchPkgBuild(pkg string) (err error) {
 func printPkgBuild(body io.ReadCloser) error {
 	defer body.Close()
 
+	if pager := os.Getenv("PAGER"); pager != "" {
+		log.Debugf("'PAGER' set as '%s'", pager)
+		return writeToPager(body, pager)
+	}
+
 	if _, err := io.Copy(os.Stdout, body); err != nil {
 		return fmt.Errorf("writing PKGBUILD: %v", err)
+	}
+
+	return nil
+}
+
+func writeToPager(body io.ReadCloser, pager string) error {
+	args := strings.Split(pager, " ")
+
+	cmd := exec.Command(args[0], args[1:]...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	pipe, err := cmd.StdinPipe()
+	if err != nil {
+		return err
+	}
+
+	go func() {
+		defer pipe.Close()
+		io.Copy(pipe, body)
+	}()
+
+	if err = cmd.Run(); err != nil {
+		return fmt.Errorf("running PAGER '%s': %v", pager, err)
 	}
 
 	return nil
