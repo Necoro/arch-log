@@ -19,31 +19,39 @@ func handleResult(what string, pkg string, repo string, f func(string, string) (
 
 	if body, err := f(pkg, repo); err == nil {
 		err := printPkgBuild(body)
-		return false, err
+		return true, err
 	} else if errors.Is(err, entries.ErrNotFound) {
 		log.Debug("Not found on ", what)
-		return true, nil
+		return false, nil
 	} else {
 		return false, fmt.Errorf("error fetching from %s: %w", what, err)
 	}
 }
 
-func fetchPkgBuild(pkg string) (err error) {
-	var notfound bool
+func fetchPkgBuild(pkg string) error {
+	if options.arm || options.armOnly {
+		if done, err := handleResult("Arch ARM", pkg, options.repo, arch.GetPkgBuild); err != nil {
+			return err
+		} else if !done && options.armOnly {
+			return notFoundError(pkg)
+		} else if done {
+			return nil
+		}
+	}
 
 	if !options.aur {
-		if notfound, err = handleResult("Arch", pkg, options.repo, arch.GetPkgBuild); err != nil {
-			return
+		if done, err := handleResult("Arch", pkg, options.repo, arch.GetPkgBuild); err != nil {
+			return err
+		} else if !done && options.arch {
+			return notFoundError(pkg)
+		} else if done {
+			return nil
 		}
 	}
 
-	if options.aur || (notfound && !options.arch) {
-		if notfound, err = handleResult("AUR", pkg, options.repo, aur.GetPkgBuild); err != nil {
-			return
-		}
-	}
-
-	if notfound {
+	if done, err := handleResult("AUR", pkg, options.repo, aur.GetPkgBuild); err != nil {
+		return err
+	} else if !done {
 		return notFoundError(pkg)
 	}
 

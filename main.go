@@ -23,6 +23,8 @@ var options struct {
 	debug        bool
 	arch         bool
 	aur          bool
+	arm          bool
+	armOnly      bool
 	repo         string
 	pkgbuild     bool
 	reverse      bool
@@ -35,6 +37,8 @@ func init() {
 	flag.BoolVarP(&options.debug, "debug", "d", false, "enable debug output")
 	flag.BoolVar(&options.arch, "arch", false, "force usage of Arch git")
 	flag.BoolVar(&options.aur, "aur", false, "force usage of AUR")
+	flag.BoolVar(&options.arm, "arm", false, "also check Arch Linux ARM")
+	flag.BoolVar(&options.armOnly, "arm-only", false, "*only* check Arch Linux ARM")
 	flag.BoolVarP(&options.reverse, "reverse", "r", false, "reverse order of commits")
 	flag.IntVarP(&options.number, "number", "n", 10, "max number of commits to show")
 	flag.BoolVarP(&options.longLog, "long", "l", false, "slightly verbose log messages")
@@ -92,6 +96,10 @@ func parseFlags() (string, error) {
 		log.Debug("Found repo 'AUR', assuming '--aur'")
 		options.aur = true
 		options.repo = ""
+	} else if strings.ToLower(options.repo) == "arm" {
+		log.Debug("Found repo 'ARM', assuming '--arm-only'")
+		options.armOnly = true
+		options.repo = ""
 	} else if options.repo != "" {
 		log.Debug("Repo is given, assuming '--arch'")
 		options.arch = true
@@ -101,6 +109,12 @@ func parseFlags() (string, error) {
 		log.Print("Forced both Arch and AUR, checking both.")
 		options.aur = false
 		options.arch = false
+	}
+
+	if options.armOnly && (options.arch || options.aur) {
+		log.Print("Requested ARM-only and other repos as well, falling back to '--arm'")
+		options.armOnly = false
+		options.arm = true
 	}
 
 	return pkg, nil
