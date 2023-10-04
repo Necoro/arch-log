@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "embed"
 	"errors"
 	"fmt"
 	"os"
@@ -12,7 +13,9 @@ import (
 	"github.com/Necoro/arch-log/pkg/log"
 )
 
-const VERSION = "0.4.0"
+//go:embed VERSION
+var VERSION string
+
 const PROG_NAME = "arch-log"
 
 var versionMsg = PROG_NAME + " v" + VERSION
