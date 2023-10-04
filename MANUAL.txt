@@ -1,0 +1,23 @@
+NAME
+  arch-log - display commit history and PKGBUILDs of Arch packages
+SYNOPSIS
+  arch-log [--arch|--aur] [-d|--debug] [-l|--long] [-n nr|--number nr]
+           [-p|--pkgbuild] [--repo repository] [-r|--reverse] [-v|--verbose]
+           [repository/]<pkg>
+
+DESCRIPTION
+  Shows the commit history of
+
+OPTIONS
+  --arch              force usage of Arch git
+  --aur               force usage of AUR
+  -d, --debug         enable debug output
+  -l, --long          slightly verbose log messages
+  -n, --number nr     max number of commits to show (default 10)
+  -p, --pkgbuild      show PKGBUILD instead of the log (honors PAGER)
+  --repo repository   restrict to repository (e.g. "extra")
+  -r, --reverse       reverse order of commits
+  --version           print version and exit
+
+ENVIRONMENT
+  PAGER     name of paging command, usually less(1)
