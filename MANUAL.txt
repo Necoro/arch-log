@@ -21,3 +21,6 @@ OPTIONS
 
 ENVIRONMENT
   PAGER     name of paging command, usually less(1)
+
+CONTACT
+  Please file bugs or ask questions at: https://github.com/Necoro/arch-log
